@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 
+/*
+HellowWord contract is a trial ethereum contract for self learning
+*/
 contract HelloWorld
 {
     string public name;

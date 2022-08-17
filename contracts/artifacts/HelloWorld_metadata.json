@@ -78,11 +78,11 @@
 	},
 	"sources": {
 		"contracts/HelloWorld.sol": {
-			"keccak256": "0x65efbbab2e5d781f408d74457c416d957628aaf8c188d3c58480d2c649be120b",
+			"keccak256": "0x99d1c1ecda3559ceaf53fdba369736611f9664be77fb7459160e540b3897fddc",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://2701c2d80b5e72dd7b4463e1cfdd4613bd76cc0cd78ef05744e33893a821cfa7",
-				"dweb:/ipfs/QmdXfPzs8CgKVwhqvK7Az2UzfRjL2RFmSnC4KE7sG9NsX2"
+				"bzz-raw://274dc360ab79930dcf28396f74bb0b0f1b92934538de3eee312fed3612cd8731",
+				"dweb:/ipfs/QmWrUEmgX2mtjkcQSaNW2tRQGahtEdmTr4rWDY5PgcgNmc"
 			]
 		}
 	},
