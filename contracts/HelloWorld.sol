@@ -1,21 +1,23 @@
-pragma solidity >=0.4.22 <0.9.0;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.7.0 <0.9.0;
+
 contract HelloWorld
 {
-    string public yourName;
-    
-    constructor() public 
+    string public name;
+
+    constructor()
     {
-        yourName = "World";
+        name = "Hello World !.. - ";
     }
-    
-    function set(string memory name) public
+
+    function set(string memory mName ) public
     {
-        yourName = name;
+        name = string(abi.encodePacked(name, mName));
     }
-    
-    function hello() view public returns (string memory) 
+
+    function hi() view public returns (string memory)
     {
-        return yourName;
-    }
+        return name;       
+    }    
     
 }

@@ -12,7 +12,20 @@
 			},
 			{
 				"inputs": [],
-				"name": "hello",
+				"name": "hi",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "name",
 				"outputs": [
 					{
 						"internalType": "string",
@@ -27,26 +40,13 @@
 				"inputs": [
 					{
 						"internalType": "string",
-						"name": "name",
+						"name": "mName",
 						"type": "string"
 					}
 				],
 				"name": "set",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "yourName",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			}
 		],
@@ -78,10 +78,11 @@
 	},
 	"sources": {
 		"contracts/HelloWorld.sol": {
-			"keccak256": "0xe1bdd04cc868d8192de0193f1339782619fb44585ebfc2ad34e7834807ff37f6",
+			"keccak256": "0x65efbbab2e5d781f408d74457c416d957628aaf8c188d3c58480d2c649be120b",
+			"license": "MIT",
 			"urls": [
-				"bzz-raw://10995f8619dcef2d388f8c5be12411b1fe615ebe06a4ae227e43b4be574e898f",
-				"dweb:/ipfs/Qmcb2G8FzrQkejLrSbYzN9NipC89i52xc1BUyRT7SQ7Bbi"
+				"bzz-raw://2701c2d80b5e72dd7b4463e1cfdd4613bd76cc0cd78ef05744e33893a821cfa7",
+				"dweb:/ipfs/QmdXfPzs8CgKVwhqvK7Az2UzfRjL2RFmSnC4KE7sG9NsX2"
 			]
 		}
 	},
