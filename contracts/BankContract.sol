@@ -8,7 +8,7 @@ contract BankContract
     {
         int client_id;
         address client_address;
-        uint client_balance_eth;
+        uint client_balance_in_ether;
     }
 
     client_account[] clients;
@@ -39,7 +39,7 @@ contract BankContract
                 isClient = true;
                 break;
             }
-            require( isClient, "Only Clients Can Csll !.." );
+            require( isClient, "Only Clients Can Call !.." );
             _;
         }
     }
@@ -89,6 +89,11 @@ contract BankContract
             payable( initialAddress ).transfer( 1 ether);
             interestDate[ initialAddress ] = block.timestamp; 
         }
+    }
+
+    function sendBonus(address clientAddress) public payable onlyManager
+    {
+        payable( clientAddress ).transfer(1 ether);
     }
 
 } //--end contract--

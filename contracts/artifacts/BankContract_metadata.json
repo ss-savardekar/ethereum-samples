@@ -63,6 +63,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "clientAddress",
+						"type": "address"
+					}
+				],
+				"name": "sendBonus",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "sendInterest",
 				"outputs": [],
@@ -134,11 +147,11 @@
 	},
 	"sources": {
 		"contracts/BankContract.sol": {
-			"keccak256": "0x5a86815110100c72df8e1208036d5ee7c41a93824c3c12d20f0f6891701e910e",
+			"keccak256": "0xd74cc9e7d69679e2c0000f351ab28c7e972b7f8a1290bbf7499da625326e373d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://641966921caf1c6a5438b051178f0985f3f3650c74f06d15a9e596df74474fe3",
-				"dweb:/ipfs/QmPzU2vCPRTJprjZ7PUPyZBpNmZZP2qZr6YWbQFQt1Bj53"
+				"bzz-raw://53e961ac90c2cc2b322a1c39f7006373dbbba806c888c5c4b490948848ea9b86",
+				"dweb:/ipfs/QmVcNya821GBSCfy9pak6fN5h3i5RNxbpQCM3u9yLZinE5"
 			]
 		}
 	},
