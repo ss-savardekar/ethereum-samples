@@ -33,16 +33,19 @@ contract DecentralizedKycContract
     // Map to store Customers
     mapping( string => Customer ) mCustomers;
 
+    // KYC Request Info
     struct KycRequest
     {
-        string  customer_name;
-        uint    customer_birthdate;
-        string  customer_email;
-        string  customer_phone;
-        string  customer_contact_address;
-        string  customer_kyc_reference_document;
-        uint    customer_kyc_date;   
+        string  kyc_reuqest_customer_name;
+        address kyc_request_bank_address;
+        // KYC is sensitive data hence only hash refrence stored
+        string  kyc_request_data_hash;
+        // date tracking 
+        uint    kyc_request_date;
+        uint    kyc_request_fulfill_date;   
     }
+    // Map to store KYC Requests
+    mapping( string => KycRequest ) mKycRequests;
 
     // initialises the deployer of the contract to be KYC admin regulator
     constructor()
@@ -89,9 +92,10 @@ contract DecentralizedKycContract
         return (address(0),"Bank Not Found",false,false,0,0);
     } 
 
-   function addNewCustomerToBank(string memory _name, address _bank, string memory _data, bool _status) public onlyBank returns ( string memory )
+   function addNewCustomerToBank(string memory _name, string memory _data, bool _status) public onlyBank returns ( string memory )
     {
-        mCustomers[ _name ] = Customer(_name,_bank,_data,_status );
+        mCustomers[ _name ] = Customer( _name, msg.sender,_data,_status );
+        mBanks[ msg.sender ].bank_customers_count = mBanks[ msg.sender ].bank_customers_count++;
         return "";
     }
 
@@ -159,4 +163,14 @@ contract DecentralizedKycContract
         return ("Bank Not Found - The Bank need to enrolled ", false);
     }
 
+    function performKycRequest( string memory _name ) public onlyBank returns( string memory )
+    {
+        if ( mCustomers[ _name ].customer_bank_address == msg.sender )
+        {
+            mKycRequests[ _name ] = KycRequest( _name, msg.sender, "", block.timestamp, 0 );
+            mBanks[ msg.sender ].bank_kyc_count = mBanks[ msg.sender ].bank_kyc_count++; 
+            return "Customer KYC request added for the Bank";
+        }
+        return "Banks can only Do KYC for own customers";
+    }
 } //--end-contract
