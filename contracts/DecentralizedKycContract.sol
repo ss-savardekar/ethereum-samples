@@ -80,11 +80,13 @@ contract DecentralizedKycContract
         return true;
     }
 
-    function showBankName() public view returns ( string memory )
+    function showBankDetails() public view returns ( address, string memory, bool, bool, int, int )
     {
         if ( isEnrolledBank( msg.sender) )
-            return mBanks[ msg.sender ].bank_name;
-        return "Bank Not Found - Pl' Enroll the Bank";
+            return ( mBanks[ msg.sender ].bank_address, mBanks[ msg.sender ].bank_name,
+            mBanks[ msg.sender ].bank_add_customer_permission, mBanks[ msg.sender ].bank_kyc_privilege,
+            mBanks[ msg.sender ].bank_customers_count, mBanks[ msg.sender ].bank_kyc_count );
+        return (address(0),"Bank Not Found",false,false,0,0);
     } 
 
    function addNewCustomerToBank(string memory _name, address _bank, string memory _data, bool _status) public onlyBank returns ( string memory )
@@ -108,6 +110,53 @@ contract DecentralizedKycContract
             return "Only Customer Bank can access the own Customer data";
         }
         return "Customer Not Found - Pl' Enroll the Customer";
+    }
+
+    function checkKycStatusOfCustomer( string memory _name ) public view returns ( string memory, bool )
+    {
+        if ( isEnrolledCustomer( _name) )
+            return ( mCustomers[ _name ].customer_name, mCustomers[ _name ].customer_kyc_status );
+        return ( "Customer Not Found", false );
     } 
+
+    function blockBankToAddNewCustomer( address _bank_address ) public onlyRegulator returns( string memory, bool )
+    {
+        if ( isEnrolledBank( _bank_address ) )
+        {
+            mBanks[ _bank_address ].bank_add_customer_permission = false;
+                return ( mBanks[ _bank_address ].bank_name, mBanks[ _bank_address ].bank_add_customer_permission );
+        }
+        return ("Bank Not Found - The Bank need to enrolled ", false);
+    }
+
+    function allowBankToAddNewCustomer( address _bank_address ) public onlyRegulator returns( string memory, bool )
+    {
+        if ( isEnrolledBank( _bank_address ) )
+        {
+            mBanks[ _bank_address ].bank_add_customer_permission = true;
+                return ( mBanks[ _bank_address ].bank_name, mBanks[ _bank_address ].bank_add_customer_permission );
+        }
+        return ("Bank Not Found - The Bank need to enrolled ", false);
+    }
+
+    function blockBankToDoKyc( address _bank_address ) public onlyRegulator returns( string memory, bool )
+    {
+        if ( isEnrolledBank( _bank_address ) )
+        {
+            mBanks[ _bank_address ].bank_kyc_privilege = false;
+                return ( mBanks[ _bank_address ].bank_name, mBanks[ _bank_address ].bank_kyc_privilege );
+        }
+        return ("Bank Not Found - The Bank need to enrolled ", false);
+    }
+
+    function allowBankToDoKyc( address _bank_address ) public onlyRegulator returns( string memory, bool )
+    {
+        if ( isEnrolledBank( _bank_address ) )
+        {
+            mBanks[ _bank_address ].bank_kyc_privilege = true;
+                return ( mBanks[ _bank_address ].bank_name, mBanks[ _bank_address ].bank_kyc_privilege );
+        }
+        return ("Bank Not Found - The Bank need to enrolled ", false);
+    }
 
 } //--end-contract
