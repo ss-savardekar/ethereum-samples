@@ -4,63 +4,110 @@ pragma solidity ^0.8.7;
 contract DecentralizedKycContract
 { //--start-contract
 
-    address regulator;  //this is regulating body - central bank ethereum address 
-                        //they own, deploy and manage the Contract for Banks
+    /*
+    This is the KYC admin or rgulatory body which deploys the KYC contract
+    */    
+    address regulator;
  
+    // Bank info
     struct Bank
     {
-        address bank_address; //unique ethereum address for bank
-        string  bank_code; //unique given identifier for each bank
-        bool    add_customer_permission;
-        bool    kyc_privilege;
-        int     customers_count;
+        address bank_address;
+        string  bank_name;
+        bool    bank_add_customer_permission;
+        bool    bank_kyc_privilege;
+        int     bank_customers_count;
+        int     bank_kyc_count;
     }
-
+    // Map to store Banks
+    mapping( address => Bank ) mBanks;
+ 
+    // Customer info
     struct Customer
     {
-        int     customer_id; //unique id or account number for each bank's customer
         string  customer_name;
-        string  customer_kyc_data;
+        address customer_bank_address;  
+        string  customer_data;
         bool    customer_kyc_status;
-        string  customer_bank_address; //to whom cutomer account belongs    
+    }
+    // Map to store Customers
+    mapping( string => Customer ) mCustomers;
+
+    struct KycRequest
+    {
+        string  customer_name;
+        uint    customer_birthdate;
+        string  customer_email;
+        string  customer_phone;
+        string  customer_contact_address;
+        string  customer_kyc_reference_document;
+        uint    customer_kyc_date;   
     }
 
-    mapping( address => Bank ) map_address2bank;
-
-
+    // initialises the deployer of the contract to be KYC admin regulator
     constructor()
     {
         regulator = msg.sender;
     }
 
-    function enrollBankToLedger(string memory _bank_code,address _bank_address ) public returns( string memory, string memory )
+    // critical operations to be performed by only kyc admin regulator
+    modifier onlyRegulator()
+    {
+        require( msg.sender == regulator, "Only KYC Admin Regulator can call" );
+        _;
+    }
+
+    // some operations to be performed only by bank
+    modifier onlyBank()
+    {
+        require( mBanks[ msg.sender ].bank_address != address(0x0),"Only Bank can call");
+        _;
+    } 
+
+    function addNewBankToLedger(string memory _bank_name,address _bank_address ) public onlyRegulator returns( string memory, string memory )
     {
         if ( isEnrolledBank( _bank_address ))
-            return ("Error - Bank Already Exists : ", map_address2bank[ _bank_address ].bank_code);
-        map_address2bank[ _bank_address ] = Bank( _bank_address, _bank_code, false, false, 0 );
-        return ("Success - New Bank Enrolled : ", map_address2bank[ _bank_address ].bank_code );   
+            return ("Error - Bank Already Exists in Ledger: ", mBanks[ _bank_address ].bank_name);
+        mBanks[ _bank_address ] = Bank( _bank_address, _bank_name, false, false, 0, 0 );
+        return ("Success - New Bank Enrolled in Ledger: ", mBanks[ _bank_address ].bank_name );   
     }
 
     function isEnrolledBank( address _bank_address ) private view returns ( bool )
     {
-        Bank memory current_bank = map_address2bank[ _bank_address ];
+        Bank memory current_bank = mBanks[ _bank_address ];
         if ( current_bank.bank_address == address(0x0) )
             return false;
         return true;
     }
 
-    function showBankCode() public view returns ( string memory )
+    function showBankName() public view returns ( string memory )
     {
         if ( isEnrolledBank( msg.sender) )
-            return map_address2bank[ msg.sender ].bank_code;
+            return mBanks[ msg.sender ].bank_name;
         return "Bank Not Found - Pl' Enroll the Bank";
     } 
-/*
-   function addCustomerToBank(string memory _name) public returns ( string memory )
+
+   function addNewCustomerToBank(string memory _name, address _bank, string memory _data, bool _status) public onlyBank returns ( string memory )
     {
-        customers.push(_)
+        mCustomers[ _name ] = Customer(_name,_bank,_data,_status );
         return "";
     }
-*/
+
+    function isEnrolledCustomer( string memory _name ) private view returns ( bool )
+    {
+        if ( mCustomers[ _name ].customer_bank_address == address(0x0) )
+            return false;
+        return true;
+    }
+
+   function showCustomerData( string memory _name ) public view onlyBank returns ( string memory )
+    {
+        if ( isEnrolledCustomer( _name) ){
+            if( mCustomers[_name].customer_bank_address == msg.sender)      
+                return mCustomers[ _name ].customer_data;
+            return "Only Customer Bank can access the own Customer data";
+        }
+        return "Customer Not Found - Pl' Enroll the Customer";
+    } 
 
 } //--end-contract
