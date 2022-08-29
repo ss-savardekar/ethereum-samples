@@ -55,15 +55,31 @@ contract DecentralizedCollegeCatalogContract
         bool    exists;
     }
 
+    // constructors and modifiers
     constructor()
     {
         eth_universityAdmin = msg.sender;
         number_of_colleges = 0;
     }    
 
-    // +ve flow test - ok 
-    function addNewCollegeToLedger( string memory _name, address _eth_addr, string memory _admin, string memory _reg_no  ) public returns ( string memory )
+    modifier onlyUniversityAdmin()
     {
+        require( msg.sender == eth_universityAdmin, "Only University Admin can perform");
+        _;
+    }
+
+    modifier onlyCollegeAuthority()
+    {
+        require( mCollegesLedger[msg.sender].exists,"Only College Authority can perform");
+        _;
+    }
+
+    // +ve flow test - ok 
+    function addNewCollegeToLedger( string memory _name, address _eth_addr, string memory _admin, string memory _reg_no  ) public onlyUniversityAdmin returns ( string memory )
+    {
+        if( isValidCollege(_eth_addr) )
+            return string(abi.encodePacked("The college already exists in ledger - ",_eth_addr ));  
+
         College storage _new_col = mCollegesLedger[ _eth_addr ];
         _new_col.name = _name;
         _new_col.eth_college = _eth_addr;
@@ -74,6 +90,7 @@ contract DecentralizedCollegeCatalogContract
         _new_col.number_of_students++;
         number_of_colleges++;
         _new_col.exists = true;
+
         return string(abi.encodePacked("New College added to ledger - ", _new_col.name ));  
     }
 
@@ -90,22 +107,35 @@ contract DecentralizedCollegeCatalogContract
     }
 
     // +ve flow test - ok
-    function blockCollegeToAddNewStudents(address _col_addr) public returns(string memory,string memory)
+    function blockCollegeToAddNewStudents(address _col_addr) public onlyUniversityAdmin returns(string memory,string memory)
     {
-        mCollegesLedger[_col_addr].permission_to_add_students = false;
-        return ( "College blocked to add students - ", mCollegesLedger[_col_addr].name );
+        if( isValidCollege(_col_addr))
+        {
+            mCollegesLedger[_col_addr].permission_to_add_students = false;
+            return ( "College blocked to add students - ", mCollegesLedger[_col_addr].name );
+        }
+        else 
+            return ( "Invalid College Address - ", mCollegesLedger[_col_addr].name );
     }
 
     // +ve flow test - ok
-    function allowCollegeToAddNewStudents(address _col_addr) public returns(string memory,string memory)
+    function allowCollegeToAddNewStudents(address _col_addr) public onlyUniversityAdmin returns(string memory,string memory)
     {
-        mCollegesLedger[_col_addr].permission_to_add_students = true;
-        return ( "College allowed to add students - ", mCollegesLedger[_col_addr].name );
+        if( isValidCollege(_col_addr))
+        {
+            mCollegesLedger[_col_addr].permission_to_add_students = true;
+            return ( "College allowed to add students - ", mCollegesLedger[_col_addr].name );
+        }
+        else
+            return ( "Invalid College Address - ", mCollegesLedger[_col_addr].name );
     }
 
     // +ve flow test - ok
-    function addNewStudentToCollege(string memory _name,string memory _phone_no) public returns(string memory,string memory,string memory)
+    function addNewStudentToCollege(string memory _name,string memory _phone_no) public onlyCollegeAuthority returns(string memory,string memory,string memory)
     {
+        if( isValidStudent(_name))
+            return ("The Student already registered - ", _name, mCollegesLedger[msg.sender].name); 
+
         Student storage _new_student = mCollegesLedger[msg.sender].mStudentsLedger[_name];
         _new_student.name = _name;
         _new_student.phone_number = _phone_no;
@@ -117,16 +147,18 @@ contract DecentralizedCollegeCatalogContract
     }
 
     // +ve flow test - ok
-    function viewStudentInfo(string memory _name) public view returns(string memory,string memory,uint)
+    function viewStudentInfo(string memory _name) public view onlyCollegeAuthority returns(string memory,string memory,uint)
     {
         Student storage _new_student = mCollegesLedger[msg.sender].mStudentsLedger[_name];
-
         return (_new_student.name,_new_student.phone_number,_new_student.roll_number);
     }
 
     // +ve flow test - ok
-    function addNewCourseToCollege(string memory _name,bool _mode) public returns(string memory,string memory,bool)
+    function addNewCourseToCollege(string memory _name,bool _mode) public onlyCollegeAuthority returns(string memory,string memory,bool)
     {
+        if( isValidCourse(_name))
+        return ("The Course already exists - ", _name, mCollegesLedger[msg.sender].mCoursesLedger[_name].classroom_mode); 
+
         Course storage _new_course = mCollegesLedger[msg.sender].mCoursesLedger[_name];
         _new_course.name = _name;
         _new_course.classroom_mode = _mode;
@@ -137,25 +169,28 @@ contract DecentralizedCollegeCatalogContract
     }
 
     // +ve flow test - ok
-    function viewCourseInfo(string memory _name) public view returns(string memory,bool)
+    function viewCourseInfo(string memory _name) public view onlyCollegeAuthority returns(string memory,bool)
     {
         Course storage _course = mCollegesLedger[msg.sender].mCoursesLedger[_name];
-
         return (_course.name,_course.classroom_mode);
     }
 
     // +ve flow test - ok
-    function enrollStudentToCourse(string memory _student_name, string memory _course_name ) public returns(string memory,string memory,string memory)
+    function enrollStudentToCourse(string memory _student_name, string memory _course_name ) public onlyCollegeAuthority returns(string memory,string memory,string memory)
     {
-        Student storage _student = mCollegesLedger[msg.sender].mStudentsLedger[_student_name];
-        Course  storage _course = mCollegesLedger[msg.sender].mCoursesLedger[_course_name];
-        _student.mCoursesEnrolled[_course_name] = _course;
-
-        return ("Student enrolled in the course - ",_student.name,_course_name);    
+        if( isValidCourse(_course_name) && isValidStudent(_student_name))
+        {
+            Student storage _student = mCollegesLedger[msg.sender].mStudentsLedger[_student_name];
+            Course  storage _course = mCollegesLedger[msg.sender].mCoursesLedger[_course_name];
+            _student.mCoursesEnrolled[_course_name] = _course;
+            return ("Student enrolled in the course - ",_student.name,_course_name);
+        }
+        else
+            return ("Invalid Course or Student info - ",_student_name,_course_name);
     }
 
     // +ve flow test
-    function isStudentEnrolledInTheCourse( string memory _student_name, string memory _course_name) public view returns(string memory,bool)
+    function isStudentEnrolledInTheCourse( string memory _student_name, string memory _course_name) public view onlyCollegeAuthority returns(string memory,bool)
     {
         if( mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_course_name].exists )
                 return ("Student is enrolled in the course - ", true);
@@ -163,13 +198,13 @@ contract DecentralizedCollegeCatalogContract
     }
 
     // +ve flow test - ok
-    function changeStudentCourse(string memory _student_name, string memory _current_course, string memory _new_course) public returns(string memory,string memory,string memory)
+    function changeStudentCourse(string memory _student_name, string memory _current_course, string memory _new_course) public onlyCollegeAuthority returns(string memory,string memory,string memory)
     {
         Course memory nullCourse;
         if( isValidStudent(_student_name) && isValidCourse(_current_course) && isValidCourse(_new_course))
         {
             if( stringCompare(_current_course,_new_course))
-            return("Same course hence can't be changed", _student_name,  _current_course);
+                return("Same course hence can't be changed", _student_name,  _current_course);
 
             mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_current_course] = nullCourse; 
             mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_new_course] 
@@ -177,9 +212,9 @@ contract DecentralizedCollegeCatalogContract
 
             return ("Student course changed - ",_student_name,_new_course);
         }
-        return ("Student course can't change - ",_student_name,_new_course);
+        return ("Invalid Student Course info - ",_student_name,_new_course);
     }
-
+ 
     //private or internal functions - validators - utility functions
 
     function isValidCollege(address _college_address) private view returns(bool)
