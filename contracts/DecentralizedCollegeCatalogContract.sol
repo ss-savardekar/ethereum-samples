@@ -25,6 +25,8 @@ contract DecentralizedCollegeCatalogContract
         // college -> conducted courses info
         mapping( string => Student ) mStudentsLedger;
         mapping( string => Course ) mCoursesLedger;
+        // internal identifier used to validate if college exists in mapping
+        bool    exists;
        }
     // colleges ledger
     mapping( address => College ) mCollegesLedger;
@@ -38,7 +40,8 @@ contract DecentralizedCollegeCatalogContract
         string  phone_number;
         // student -> enrolled courses info
         mapping( string => Course ) mCoursesEnrolled;
-        uint    number_of_courses_enrolled;
+        // internal identifier used to validate if college exists in mapping
+        bool    exists;
     }
 
     // course info
@@ -48,6 +51,8 @@ contract DecentralizedCollegeCatalogContract
         string  college_name;
         uint    start_date;
         bool    classroom_mode;
+        // internal identifier used to validate if college exists in mapping
+        bool    exists;
     }
 
     constructor()
@@ -68,6 +73,7 @@ contract DecentralizedCollegeCatalogContract
         _new_col.permission_to_add_courses = true;
         _new_col.number_of_students++;
         number_of_colleges++;
+        _new_col.exists = true;
         return string(abi.encodePacked("New College added to ledger - ", _new_col.name ));  
     }
 
@@ -103,7 +109,9 @@ contract DecentralizedCollegeCatalogContract
         Student storage _new_student = mCollegesLedger[msg.sender].mStudentsLedger[_name];
         _new_student.name = _name;
         _new_student.phone_number = _phone_no;
-        _new_student.roll_number = mCollegesLedger[msg.sender].number_of_students++;
+        mCollegesLedger[msg.sender].number_of_students++;
+        _new_student.roll_number = mCollegesLedger[msg.sender].number_of_students;
+        _new_student.exists = true;
     
         return ("Student added to college - ", _new_student.name, mCollegesLedger[msg.sender].name); 
     }
@@ -123,6 +131,7 @@ contract DecentralizedCollegeCatalogContract
         _new_course.name = _name;
         _new_course.classroom_mode = _mode;
         _new_course.start_date = block.timestamp;
+        _new_course.exists = true;
     
         return ("Course added to college - ", _new_course.name, _new_course.classroom_mode); 
     }
@@ -140,29 +149,60 @@ contract DecentralizedCollegeCatalogContract
     {
         Student storage _student = mCollegesLedger[msg.sender].mStudentsLedger[_student_name];
         Course  storage _course = mCollegesLedger[msg.sender].mCoursesLedger[_course_name];
-        _student.mCoursesEnrolled[_course.name] = _course;
+        _student.mCoursesEnrolled[_course_name] = _course;
 
         return ("Student enrolled in the course - ",_student.name,_course_name);    
     }
 
     // +ve flow test
-    function isStudentEnrolledInTheCourse(string memory _student_name, string memory _course_name) public view returns(string memory,bool)
+    function isStudentEnrolledInTheCourse( string memory _student_name, string memory _course_name) public view returns(string memory,bool)
     {
-        Student storage _student = mCollegesLedger[msg.sender].mStudentsLedger[_student_name];
-        //Course  storage _course = mCollegesLedger[msg.sender].mCoursesLedger[_course_name];
-
-        if( abi.encodePacked((_student.mCoursesEnrolled[_course_name]).name).length > 0)
-            return ("Student is enrolled in the course - ", true);
+        if( mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_course_name].exists )
+                return ("Student is enrolled in the course - ", true);
         return ("Student is not enrolled in the course - ", false);
     }
 
     // +ve flow test - ok
-    function changeStudentCourse(string memory _student_name, string memory _curr_course, string memory _new_course) public returns(string memory,string memory,string memory)
+    function changeStudentCourse(string memory _student_name, string memory _current_course, string memory _new_course) public returns(string memory,string memory,string memory)
     {
-        Student storage _student = mCollegesLedger[msg.sender].mStudentsLedger[_student_name];
-        _student.mCoursesEnrolled[_curr_course] = _student.mCoursesEnrolled[_new_course];
+        Course memory nullCourse;
+        if( isValidStudent(_student_name) && isValidCourse(_current_course) && isValidCourse(_new_course))
+        {
+            if( stringCompare(_current_course,_new_course))
+            return("Same course hence can't be changed", _student_name,  _current_course);
 
-        return ("Student course changed - ",_student.name,_new_course);
+            mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_current_course] = nullCourse; 
+            mCollegesLedger[msg.sender].mStudentsLedger[_student_name].mCoursesEnrolled[_new_course] 
+            = mCollegesLedger[msg.sender].mCoursesLedger[_new_course]; 
+
+            return ("Student course changed - ",_student_name,_new_course);
+        }
+        return ("Student course can't change - ",_student_name,_new_course);
+    }
+
+    //private or internal functions - validators - utility functions
+
+    function isValidCollege(address _college_address) private view returns(bool)
+    {
+        return mCollegesLedger[_college_address].exists;
+    }
+
+    function isValidCourse(string memory _course_name ) private view returns(bool)
+    {
+        return mCollegesLedger[msg.sender].mCoursesLedger[_course_name].exists;
+    }
+
+    function isValidStudent(string memory _student_name) private view returns(bool)
+    {
+        return mCollegesLedger[msg.sender].mStudentsLedger[_student_name].exists;
+    }
+
+    function stringCompare(string memory _str1,string memory _str2) private pure returns(bool)
+    {
+        // Compare string keccak256 hashes to check equality
+        if (keccak256(abi.encodePacked(_str1)) == keccak256(abi.encodePacked(_str2)))
+            return true;
+        return false;
     }
 
 }//end-contract
