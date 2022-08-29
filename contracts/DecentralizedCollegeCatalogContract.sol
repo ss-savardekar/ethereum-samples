@@ -9,6 +9,7 @@ contract DecentralizedCollegeCatalogContract
     */
     address eth_universityAdmin;
 
+
     // college info
     struct College
     {
