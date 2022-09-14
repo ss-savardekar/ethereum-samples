@@ -142,8 +142,10 @@ contract DecentralizedKycContract
         - string bank name
     * +ve tests    :
         - sample data test ok
+        - permission to add customer test ok
     * -ve tests    :
-        - already existing customer test ok   
+        - already existing customer test ok
+        - blocked to add customer test ok   
     */
    function addNewCustomerToBank(string memory _name, string memory _data, bool _status) public onlyBank returns ( string memory, string memory, string memory )
     {
@@ -345,8 +347,10 @@ contract DecentralizedKycContract
         - string bank name
     * +ve tests    :
         - sample data test ok
+        - bank kyc privilege set test ok
     * -ve tests    :
         - already existing bank customer test ok
+        - bank kyc privilege blocked test ok
     */
     function performKycRequest( string memory _name ) public onlyBank returns( string memory, string memory )
     {
